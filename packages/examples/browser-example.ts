@@ -53,6 +53,7 @@ async function example() {
       '6',
       '-hls_flags',
       'delete_segments',
+      '-an'
       path.join(publicOutputDirectory, 'stream.m3u8'),
     ],
   })
