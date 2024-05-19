@@ -53,7 +53,7 @@ async function example() {
       '6',
       '-hls_flags',
       'delete_segments',
-      '-an'
+      '-an',
       path.join(publicOutputDirectory, 'stream.m3u8'),
     ],
   })
@@ -68,7 +68,7 @@ async function example() {
       console.log('Stopping call...')
       call.stop()
     },
-    5 * 60 * 1000,
+    1440 * 60 * 1000,
   ) // Stop after 5 minutes.
 }
 
