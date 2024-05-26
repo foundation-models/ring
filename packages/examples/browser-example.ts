@@ -4,6 +4,7 @@ import { promisify } from 'util'
 const fs = require('fs'),
   path = require('path'),
   express = require('express')
+  import { spawn } from 'child_process';
 
 /**
  * This example creates an hls stream which is viewable in a browser
@@ -60,16 +61,18 @@ async function example() {
 
   call.onCallEnded.subscribe(() => {
     console.log('Call has ended')
+    const childProcess = spawn('npm run browser-example', [], { shell: true, stdio: 'inherit' });
     process.exit()
   })
 
   setTimeout(
     function () {
       console.log('Stopping call...')
+      const childProcess = spawn('npm run browser-example', [], { shell: true, stdio: 'inherit' });
       call.stop()
     },
     1440 * 60 * 1000,
-  ) // Stop after 5 minutes.
+  ) // Stop and respawn after 1440 minutes.
 }
 
 example().catch((e) => {
