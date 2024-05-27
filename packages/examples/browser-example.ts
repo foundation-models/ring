@@ -5,25 +5,43 @@ const fs = require('fs'),
   path = require('path'),
   express = require('express')
   import { spawn } from 'child_process';
-
+  
 /**
  * This example creates an hls stream which is viewable in a browser
  * It also starts web app to view the stream at http://localhost:3000
  **/
+// Read the JSON file
+let rawData = fs.readFileSync('/home/agent/workspace/isights/data.json');
+let name = JSON.parse(rawData);
 
+
+
+
+let cameraTostream = 0;
+console.log(name[9].name);
 async function example() {
   const ringApi = new RingApi({
       // Replace with your refresh token
       refreshToken: process.env.RING_REFRESH_TOKEN!,
       debug: true,
     }),
-    [camera] = await ringApi.getCameras()
-
-  if (!camera) {
+    // [camera] = await ringApi.getCameras(),
+    cameras = await ringApi.getCameras()
+    for (let index = 0; index < cameras.length; index++) {
+      const element = cameras[index];
+      if (element.name === name[9].name) {
+        cameraTostream = index
+    }
+      console.log(element.name,element.id,index)
+    }
+    
+  
+  if (!cameras[cameraTostream]) {
     console.log('No cameras found')
     return
+  }else{
+    console.log('hereeeeeeeeee',cameras[cameraTostream].name)
   }
-
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
 
@@ -38,7 +56,7 @@ async function example() {
     await promisify(fs.mkdir)(publicOutputDirectory)
   }
 
-  const call = await camera.streamVideo({
+  const call = await cameras[cameraTostream].streamVideo({
     output: [
       '-preset',
       'veryfast',
