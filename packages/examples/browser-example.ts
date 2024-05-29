@@ -10,6 +10,12 @@ const fs = require('fs'),
  * This example creates an hls stream which is viewable in a browser
  * It also starts web app to view the stream at http://localhost:3000
  **/
+
+
+// Get the camera name from the command line arguments
+const cameraName = process.argv[2];
+
+
 // Read the JSON file
 let rawData = fs.readFileSync('/home/agent/workspace/isights/data.json');
 let name = JSON.parse(rawData);
