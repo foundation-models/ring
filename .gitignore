@@ -8,3 +8,4 @@ yarn.lock
 .homebridge
 .hoobs
 .turbo
+/home/agent/workspace/ring/packages/examples/public

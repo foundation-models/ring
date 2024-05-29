@@ -25,7 +25,7 @@ let name = JSON.parse(rawData);
 
 
 let cameraTostream = 0;
-console.log(name[9].name);
+// console.log(name[9].name);
 async function example() {
   const ringApi = new RingApi({
       // Replace with your refresh token
@@ -52,12 +52,12 @@ async function example() {
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
 
-  app.use('/', express.static(path.join(__dirname, 'public')))
-  app.listen(3000, () => {
-    console.log(
-      'Listening on port 3000.  Go to http://localhost:3000 in your browser',
-    )
-  })
+  //app.use('/', express.static(path.join(__dirname, 'public')))
+  // app.listen(3000, () => {
+  //   console.log(
+  //     'Listening on port 3000.  Go to http://localhost:3000 in your browser',
+  //   )
+  // })
 
   if (!(await promisify(fs.exists)(publicOutputDirectory))) {
     await promisify(fs.mkdir)(publicOutputDirectory)
