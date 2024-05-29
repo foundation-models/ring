@@ -1,10 +1,11 @@
 import 'dotenv/config'
 import { RingApi } from '../ring-client-api'
 import { promisify } from 'util'
+import { spawn } from 'child_process'
 const fs = require('fs'),
   path = require('path'),
   express = require('express')
-  import { spawn } from 'child_process';
+
   
 /**
  * This example creates an hls stream which is viewable in a browser
@@ -13,8 +14,8 @@ const fs = require('fs'),
 
 
 // Get the camera name from the command line arguments
-const cameraName = process.argv[2];
-
+let cameraName = process.argv[2];
+// npm run browser-example --camera "Elementary 2"
 
 // Read the JSON file
 let rawData = fs.readFileSync('/home/agent/workspace/isights/data.json');
@@ -35,7 +36,7 @@ async function example() {
     cameras = await ringApi.getCameras()
     for (let index = 0; index < cameras.length; index++) {
       const element = cameras[index];
-      if (element.name === name[9].name) {
+      if (element.name === cameraName) {
         cameraTostream = index
     }
       console.log(element.name,element.id,index)
@@ -79,7 +80,7 @@ async function example() {
       '-hls_flags',
       'delete_segments',
       '-an',
-      path.join(publicOutputDirectory, 'stream.m3u8'),
+      path.join(publicOutputDirectory, cameraName+'_stream.m3u8'),
     ],
   })
 
