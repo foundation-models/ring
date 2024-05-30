@@ -15,7 +15,8 @@ const fs = require('fs'),
 
 // Get the camera name from the command line arguments
 let cameraName = process.argv[2];
-// npm run browser-example --camera "Elementary 2"
+console.log(cameraName)
+// npm run browser-example "Elementary 2"
 
 // Read the JSON file
 let rawData = fs.readFileSync('/home/agent/workspace/isights/data.json');
@@ -52,12 +53,12 @@ async function example() {
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
 
-  //app.use('/', express.static(path.join(__dirname, 'public')))
-  // app.listen(3000, () => {
-  //   console.log(
-  //     'Listening on port 3000.  Go to http://localhost:3000 in your browser',
-  //   )
-  // })
+  app.use('/', express.static(path.join(__dirname, 'public')))
+  app.listen(3000, () => {
+    console.log(
+      'Listening on port 3000.  Go to http://localhost:3000 in your browser',
+    )
+  })
 
   if (!(await promisify(fs.exists)(publicOutputDirectory))) {
     await promisify(fs.mkdir)(publicOutputDirectory)
@@ -83,17 +84,27 @@ async function example() {
       path.join(publicOutputDirectory, cameraName+'_stream.m3u8'),
     ],
   })
-
+  
   call.onCallEnded.subscribe(() => {
     console.log('Call has ended')
-    const childProcess = spawn('npm run browser-example', [], { shell: true, stdio: 'inherit' });
+    const command = 'npm';
+    const args = ['run', 'browser-example', cameraName];
+    console.log(args)
+    const childProcess = spawn(command, args, { shell: true, stdio: 'inherit' });
+    //const childProcess = spawn('npm run browser-example '+ cameraName , [], { shell: true, stdio: 'inherit' });
     process.exit()
   })
 
   setTimeout(
     function () {
       console.log('Stopping call...')
-      const childProcess = spawn('npm run browser-example', [], { shell: true, stdio: 'inherit' });
+      const command = 'npm';
+      const args = ['run', 'browser-example', `"${cameraName}"`];
+      console.log(args)
+      const childProcess = spawn(command, args, { shell: true, stdio: 'inherit' });
+      
+
+      //const childProcess = spawn('npm run browser-example'+ cameraName , [], { shell: true, stdio: 'inherit' });
       call.stop()
     },
     1440 * 60 * 1000,
