@@ -54,12 +54,12 @@ async function example() {
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
 
-  app.use('/', express.static(path.join(__dirname, 'public')))
-  app.listen(3000, () => {
-    console.log(
-      'Listening on port 3000.  Go to http://localhost:3000 in your browser',
-    )
-  })
+  // app.use('/', express.static(path.join(__dirname, 'public')))
+  // app.listen(3000, () => {
+  //   console.log(
+  //     'Listening on port 3000.  Go to http://localhost:3000 in your browser',
+  //   )
+  // })
 
   if (!(await promisify(fs.exists)(publicOutputDirectory))) {
     await promisify(fs.mkdir)(publicOutputDirectory)
@@ -72,7 +72,7 @@ async function example() {
       '-g',
       '25',
       '-sc_threshold',
-      '0',
+      '1',
       '-f',
       'hls',
       '-hls_time',
