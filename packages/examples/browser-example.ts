@@ -93,6 +93,7 @@ async function example() {
     const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' });
     process.exit()
   })
+  // `npm run browser-example "${cameraName}"`
 
   setTimeout(
     function () {
