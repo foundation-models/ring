@@ -48,6 +48,7 @@ async function example() {
     console.log('No cameras found')
     return
   }else{
+    // const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' }); 
     console.log('hereeeeeeeeee',cameras[cameraTostream].name)
   }
   const app = express(),
@@ -84,27 +85,19 @@ async function example() {
       path.join(publicOutputDirectory, cameraName+'_stream.m3u8'),
     ],
   })
-  
+  // cameraName = "Casa 3"
+  // const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' }); 
+  // console.log('hereeeeeeeeee',cameras[cameraTostream].name) 
   call.onCallEnded.subscribe(() => {
     console.log('Call has ended')
-    const command = 'npm';
-    const args = ['run', 'browser-example', cameraName];
-    console.log(args)
-    const childProcess = spawn(command, args, { shell: true, stdio: 'inherit' });
-    //const childProcess = spawn('npm run browser-example '+ cameraName , [], { shell: true, stdio: 'inherit' });
+    const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' });
     process.exit()
   })
 
   setTimeout(
     function () {
       console.log('Stopping call...')
-      const command = 'npm';
-      const args = ['run', 'browser-example', `"${cameraName}"`];
-      console.log(args)
-      const childProcess = spawn(command, args, { shell: true, stdio: 'inherit' });
-      
-
-      //const childProcess = spawn('npm run browser-example'+ cameraName , [], { shell: true, stdio: 'inherit' });
+      const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' }); 
       call.stop()
     },
     1440 * 60 * 1000,
