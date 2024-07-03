@@ -18,13 +18,6 @@ let cameraName = process.argv[2];
 console.log(cameraName)
 // npm run browser-example "Elementary 2"
 
-// Read the JSON file
-let rawData = fs.readFileSync('/home/agent/workspace/isights/data.json');
-let name = JSON.parse(rawData);
-
-
-
-
 let cameraTostream = 0;
 // console.log(name[9].name);
 async function example() {
@@ -49,7 +42,7 @@ async function example() {
     return
   }else{
     // const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' }); 
-    console.log('hereeeeeeeeee',cameras[cameraTostream].name)
+    console.log('There we go : ',cameras[cameraTostream].name)
   }
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
@@ -72,7 +65,7 @@ async function example() {
       '-g',
       '25',
       '-sc_threshold',
-      '1',
+      '0',
       '-f',
       'hls',
       '-hls_time',
@@ -82,12 +75,10 @@ async function example() {
       '-hls_flags',
       'delete_segments',
       '-an',
-      path.join(publicOutputDirectory, cameraName+'_stream.m3u8'),
+      path.join(publicOutputDirectory, `${cameraName}`+`_stream.m3u8`),
     ],
   })
-  // cameraName = "Casa 3"
-  // const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' }); 
-  // console.log('hereeeeeeeeee',cameras[cameraTostream].name) 
+ 
   call.onCallEnded.subscribe(() => {
     console.log('Call has ended')
     const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' });
