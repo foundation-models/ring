@@ -2,63 +2,85 @@
 <html>
 <head>
   <title>Camera Control Panel</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f2f2f7;
+      color: #000;
+      line-height: 1.4;
+    }
+
+    .camera-list {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+    }
+
+    .camera-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 300px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      background-color: #fff;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .status-on {
+      background-color: green;
+    }
+
+    .status-off {
+      background-color: red;
+    }
+  </style>
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body>
   <h1>Camera Control Panel</h1>
   <div id="camera-list"></div>
-
-  <script>
-    // Fetch the list of cameras when the page loads
-    $(document).ready(function() {
-      $.getJSON('/cameras', function(data) {
-        data.forEach(function(camera) {
-          // Create a div for each camera
-          var cameraDiv = $('<div></div>');
-          cameraDiv.text(camera.name);
-
-          // Create a button for each camera
-          var toggleButton = $('<button>Toggle Stream</button>');
-          toggleButton.click(function() {
-            $.post('/cameras/' + camera.id + '/toggle', function(data) {
-              alert('Toggled stream for ' + camera.name);
-            });
-          });
-
-          // Add the button to the div
-          cameraDiv.append(toggleButton);
-
-          // Add the div to the camera list
-          $('#camera-list').append(cameraDiv);
-        });
-      });
-    });
-  </script>
 </body>
 </html>
 <script>
-  // ...
+  // Fetch the list of cameras when the page loads
+  $(document).ready(function() {
+    $.getJSON('/cameras', function(data) {
+      data.forEach(function(camera) {
+        // Create a div for each camera
+        var cameraDiv = $('<div class="camera-item"></div>');
+        cameraDiv.text(camera.name);
 
-  data.forEach(function(camera) {
-    // ...
+        // Create a status indicator for each camera
+        var statusIndicator = $('<div class="status-indicator"></div>');
+        statusIndicator.addClass(camera.isStreaming ? 'status-on' : 'status-off');
+        cameraDiv.append(statusIndicator);
 
-    // Update the button text based on the streaming status
-    var buttonText = camera.isStreaming ? 'Stop Stream' : 'Start Stream';
-    var toggleButton = $('<button>' + buttonText + '</button>');
+        // Create a button for each camera
+        var toggleButton = $('<button></button>');
+        toggleButton.text(camera.isStreaming ? 'Stop Stream' : 'Start Stream');
+        toggleButton.click(function() {
+          $.post('/cameras/' + camera.id + '/toggle', function(data) {
+            // Update the button text and the status indicator based on the new streaming status
+            toggleButton.text(data.isStreaming ? 'Stop Stream' : 'Start Stream');
+            statusIndicator.removeClass('status-on status-off');
+            statusIndicator.addClass(data.isStreaming ? 'status-on' : 'status-off');
+          });
+        });
+        cameraDiv.append(toggleButton);
 
-    toggleButton.click(function() {
-      $.post('/cameras/' + camera.id + '/toggle', function(data) {
-        // Update the button text based on the new streaming status
-        toggleButton.text(data.isStreaming ? 'Stop Stream' : 'Start Stream');
-
-        // Update the button color based on the new streaming status
-        toggleButton.css('background-color', data.isStreaming ? 'green' : 'lightgray');
+        // Add the div to the camera list
+        $('#camera-list').append(cameraDiv);
       });
     });
-
-    // Set the initial button color based on the streaming status
-    toggleButton.css('background-color', camera.isStreaming ? 'green' : 'lightgray');
-
-    // ...
   });
 </script>
