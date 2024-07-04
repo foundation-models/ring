@@ -79,10 +79,16 @@ async function startStream(camera) {
       ],
     })
     camera.call = call
-    
+    // Set a property to indicate that the stream should be restarted if it ends
+    camera.shouldRestart = true
     call.onCallEnded.subscribe(() => {
       console.log('Call has ended')
       // const childProcess = spawn(`npm run browser-example "${cameraName}"`, [], { shell: true, stdio: 'inherit' });
+
+      if (camera.shouldRestart) {
+        console.log('Restarting stream for camera ' + camera.id)
+        startStream(camera)
+      }
       //process.exit()
     })
     
@@ -91,21 +97,40 @@ camera.isStreaming = true
 }
 // Convert fs.unlink into a promise-based function
 const unlink = util.promisify(fs.unlink)
+// Convert fs.readdir into a promise-based function
+const readdir = util.promisify(fs.readdir)
 async function stopStream(camera) {
   // Check if the camera has a call to stop
   if (camera.call) {
     console.log('Stopping stream for camera ' + camera.id)
+    // Set the property to indicate that the stream should not be restarted
+    camera.shouldRestart = false
     camera.call.stop()
     camera.isStreaming = false
     camera.call = null
-  // Delete the stream file
-  const filePath = path.join(__dirname, 'public/output', `${camera.name}_stream.m3u8`)
-  try {
-    await unlink(filePath)
-    console.log('Deleted stream file for camera ' + camera.id)
-  } catch (err) {
-    console.error('Failed to delete stream file for camera ' + camera.id, err)
-  }
+  // Wait for 2 seconds before deleting the stream file
+  setTimeout(async () => {
+    const filePath = path.join(__dirname, 'public/output', `${camera.name}_stream.m3u8`)
+    try {
+      await unlink(filePath)
+      console.log('Deleted stream file for camera ' + camera.id)
+    } catch (err) {
+      console.error('Failed to delete stream file for camera ' + camera.id, err)
+    }
+    // Delete the .ts files
+    const dirPath = path.join(__dirname, 'public/output')
+    const files = await readdir(dirPath)
+    for (const file of files) {
+      if (file.startsWith(`${camera.name}_stream`) && file.endsWith('.ts')) {
+        try {
+          await unlink(path.join(dirPath, file))
+          console.log('Deleted ' + file)
+        } catch (err) {
+          console.error('Failed to delete ' + file, err)
+        }
+      }
+    }
+  }, 2000)
 } else {
   console.log('No stream to stop for camera ' + camera.id)
 }
@@ -140,7 +165,20 @@ app.post('/cameras/:id/toggle', async (req, res) => {
   res.json({ success: true, isStreaming: camera.isStreaming })
 })
 
-
+app.get('/cameras/:id/last-frame', function(req, res) {
+  var cameraId = req.params.id;
+  // Get the last frame of the camera's stream
+  // This will depend on how you're handling video streams
+  // For example, if you're using ffmpeg to save frames as images:
+  var framePath = path.join(__dirname, 'camera_frames', cameraId, 'last.jpg');
+  fs.readFile(framePath, function(err, data) {
+    if (err) {
+      res.status(500).send('Error reading frame');
+    } else {
+      res.send(data.toString('base64'));
+    }
+  });
+});
 // Start server
 app.listen(3000, () => {
   console.log('Server is running on port 3000')

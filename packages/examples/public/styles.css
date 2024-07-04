@@ -1,0 +1,66 @@
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f2f2f7;
+  color: #000;
+  line-height: 1.4;
+  padding: 20px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+#camera-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.camera-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  background-color: #fff;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.camera-item p {
+  flex-grow: 1;
+  text-align: center;
+  margin-right: 10px; /* Add some space between the name and the status indicators */
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 20px; /* Increase right margin for better spacing */
+}
+
+.status-on {
+  background-color: limegreen;
+}
+
+.status-off {
+  background-color: crimson;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: dodgerblue;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
