@@ -7,61 +7,61 @@
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body>
-  <h1>Camera Control Panel</h1>
+  
   <link rel="stylesheet" type="text/css" href="styles.css">
-  <div id="camera-list"></div>
+  <div id="camera-container">
+    <h1>Camera Control Panel</h1>
+    <div id="camera-list"></div>
+  </div>
 </body>
 </html>
 <script>
-  // Fetch the list of cameras when the page loads
 $(document).ready(function() {
   $.getJSON('/cameras', function(data) {
-    // Inside $.getJSON callback function
     data.forEach(function(camera) {
-      // Create a div for each camera
       var cameraDiv = $('<div class="camera-item"></div>');
-
-      // Create a div for the camera name and status indicators
+      var buttonDiv = $('<div style="display: flex; align-items: center;"></div>')
       var cameraInfoDiv = $('<div style="display: flex; align-items: center;"></div>');
       cameraDiv.append(cameraInfoDiv);
-
-      // Append the camera name
       cameraInfoDiv.append($('<p></p>').text(camera.name));
-
-      // Create a status indicator for streaming
       var streamingIndicator = $('<div class="status-indicator"></div>');
       streamingIndicator.addClass(camera.isStreaming ? 'status-on' : 'status-off');
       cameraInfoDiv.append($('<p>Streaming</p>'));
       cameraInfoDiv.append(streamingIndicator);
-
-      // Create a status indicator for frame fetching
       var frameFetchIndicator = $('<div class="status-indicator status-off"></div>');
       cameraInfoDiv.append($('<p>Fetching Frames</p>'));
       cameraInfoDiv.append(frameFetchIndicator);
-
-      // Create a button for each camera
       var toggleButton = $('<button></button>');
       toggleButton.text(camera.isStreaming ? 'Stop Stream' : 'Start Stream');
+      var intervalId;
       toggleButton.click(function() {
         $.post('/cameras/' + camera.id + '/toggle', function(data) {
-          // Update the button text and the status indicator based on the new streaming status
           toggleButton.text(data.isStreaming ? 'Stop Stream' : 'Start Stream');
           streamingIndicator.removeClass('status-on status-off');
           streamingIndicator.addClass(data.isStreaming ? 'status-on' : 'status-off');
+          if (data.isStreaming) {
+            frameFetchButton.text('Stop Fetching Frames');
+            intervalId = setInterval(function() {
+              $.get('/cameras/' + camera.id + '/last-frame', function(frameData) {
+                $('#camera-' + camera.id + '-frame').attr('src', 'data:image/jpeg;base64,' + frameData);
+              });
+            }, 3000);
+            frameFetchIndicator.removeClass('status-off').addClass('status-on');
+          } else {
+            frameFetchButton.text('Fetch Frames');
+            clearInterval(intervalId);
+            frameFetchIndicator.removeClass('status-on').addClass('status-off');
+          }
         });
       });
-      cameraDiv.append(toggleButton);
-
-      // Create a frame fetch button for each camera
+      buttonDiv.append(toggleButton);
       var frameFetchButton = $('<button></button>');
       frameFetchButton.text('Fetch Frames');
-      var intervalId;
       frameFetchButton.click(function() {
         if (frameFetchButton.text() === 'Fetch Frames') {
           frameFetchButton.text('Stop Fetching Frames');
           intervalId = setInterval(function() {
             $.get('/cameras/' + camera.id + '/last-frame', function(frameData) {
-              // Update the camera's frame in the UI
               $('#camera-' + camera.id + '-frame').attr('src', 'data:image/jpeg;base64,' + frameData);
             });
           }, 3000);
@@ -72,12 +72,27 @@ $(document).ready(function() {
           frameFetchIndicator.removeClass('status-on').addClass('status-off');
         }
       });
-      cameraDiv.append(frameFetchButton);
-
-      // Add the div to the camera list
+      <!-- buttonDiv.append(frameFetchButton); -->
+      
+      cameraDiv.append(buttonDiv)
       $('#camera-list').append(cameraDiv);
+      var intervalInput = $('<input type="number" min="1">');
+      intervalInput.val(3000); // Default value
+      intervalInput.change(function() {
+        var newInterval = Number(intervalInput.val());
+        if (newInterval && newInterval > 0) {
+          $.post('/cameras/' + camera.id + '/set-frame-grab-interval', { interval: newInterval }, function(data) {
+            if (data.success) {
+              console.log('Updated frame grab interval for camera ' + camera.id);
+            } else {
+              console.error('Failed to update frame grab interval for camera ' + camera.id);
+            }
+          });
+        }
+      });
+      buttonDiv.append($('<p>Grab Interval(ms)</p>'));
+      buttonDiv.append(intervalInput);
     });
   });
 });
-
 </script>

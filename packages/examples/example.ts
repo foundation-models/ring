@@ -13,6 +13,8 @@ const publicOutputDirectory = path.join(__dirname, 'public/output')
 const app = express()
 app.use('/', express.static(publicDirectory))
 app.use(bodyParser.json())
+// Global variable for frame grab interval
+let frameGrabInterval = 3000; // Default to 3 seconds
 // app.use('/', express.static(__dirname))
 let cameras = []
 
@@ -50,6 +52,18 @@ app.get('/cameras', (req, res) => {
   const cameraList = cameras.map(camera => ({ id: camera.id, name: camera.name, isStreaming: camera.isStreaming }))
   res.json(cameraList)
 })
+// Function to grab the latest frame
+async function grabLatestFrame(camera) {
+  var framePath = path.join(__dirname, 'camera_frames', camera.id.toString(), 'last.jpg');
+  fs.readFile(framePath, function(err, data) {
+    if (err) {
+      console.error('Error reading frame');
+    } else {
+      console.log('Grabbed latest frame for camera ' + camera.id);
+      // TODO: Store the frame data as needed
+    }
+  });
+}
 async function startStream(camera) { 
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
@@ -63,19 +77,22 @@ async function startStream(camera) {
         '-preset',
         'veryfast',
         '-g',
-        '25',
-        '-sc_threshold',
-        '0',
-        '-f',
-        'hls',
-        '-hls_time',
-        '2',
-        '-hls_list_size',
-        '6',
-        '-hls_flags',
-        'delete_segments',
-        '-an',
-        path.join(publicOutputDirectory, `${camera.name}`+`_stream.m3u8`),
+            '25',
+            '-sc_threshold',
+            '0',
+            '-f',
+            'hls',
+            '-hls_time',
+            '2',
+            '-hls_list_size',
+            '6',
+            '-hls_flags',
+            'delete_segments',
+            '-an',
+            path.join(publicOutputDirectory, `${camera.name}`+`_stream.m3u8`),
+        '-vf', 'fps=1/3', // This sets the frame rate to 1 frame every 3 seconds
+        '-update', '1', // This makes sure the output file is overwritten
+        path.join(publicOutputDirectory, `${camera.name}_frame.jpg`), // Output to a .jpg file
       ],
     })
     camera.call = call
@@ -94,6 +111,7 @@ async function startStream(camera) {
     
 console.log('Camera of '+camera.name+' Streamming is Started ')
 camera.isStreaming = true
+// camera.frameGrabIntervalId = setInterval(() => grabLatestFrame(camera), frameGrabInterval);
 }
 // Convert fs.unlink into a promise-based function
 const unlink = util.promisify(fs.unlink)
@@ -134,6 +152,7 @@ async function stopStream(camera) {
 } else {
   console.log('No stream to stop for camera ' + camera.id)
 }
+clearInterval(camera.frameGrabIntervalId);
 }
 // Endpoint to toggle camera stream
 app.post('/cameras/:id/toggle', async (req, res) => {
@@ -155,8 +174,18 @@ app.post('/cameras/:id/toggle', async (req, res) => {
     console.log('Starting stream for camera ' + cameraId)
     await startStream(camera)
     camera.isStreaming = true
+    // Start fetching frames when the streaming starts
+    var framePath = path.join(__dirname, 'camera_frames', camera.id.toString(), 'last.jpg');
+    fs.readFile(framePath, function(err, data) {
+      if (err) {
+        console.error('Error reading frame');
+      } else {
+        console.log('Started fetching frames for camera ' + cameraId);
+      }
+    });
   }
-
+  
+  
   // Save the new state
   const savedStates = JSON.parse(fs.readFileSync(path.join(__dirname, 'cameraStates.json'), 'utf-8'))
   savedStates[camera.id] = camera.isStreaming
@@ -165,6 +194,22 @@ app.post('/cameras/:id/toggle', async (req, res) => {
   res.json({ success: true, isStreaming: camera.isStreaming })
 })
 
+// Endpoint to set frame grab interval
+app.post('/cameras/:id/set-frame-grab-interval', (req, res) => {
+  const cameraId = Number(req.params.id);
+  const newInterval = req.body.interval;
+  const camera = cameras.find(cam => cam.id === cameraId);
+  if (camera && newInterval && typeof newInterval === 'number' && newInterval > 0) {
+    clearInterval(camera.frameGrabIntervalId);
+    camera.frameGrabIntervalId = setInterval(() => grabLatestFrame(camera), newInterval);
+    res.json({ success: true });
+  } else {
+    res.status(400).json({ error: 'Invalid interval or camera id' });
+  }
+});
+
+
+// old one 
 app.get('/cameras/:id/last-frame', function(req, res) {
   var cameraId = req.params.id;
   // Get the last frame of the camera's stream
