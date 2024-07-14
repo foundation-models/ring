@@ -29,8 +29,8 @@ $(document).ready(function() {
       cameraInfoDiv.append($('<p>Streaming</p>'));
       cameraInfoDiv.append(streamingIndicator);
       var frameFetchIndicator = $('<div class="status-indicator status-off"></div>');
-      cameraInfoDiv.append($('<p>Fetching Frames</p>'));
-      cameraInfoDiv.append(frameFetchIndicator);
+      //cameraInfoDiv.append($('<p>Fetching Frames</p>'));
+      //cameraInfoDiv.append(frameFetchIndicator);
       var toggleButton = $('<button></button>');
       toggleButton.text(camera.isStreaming ? 'Stop Stream' : 'Start Stream');
       var intervalId;
@@ -39,59 +39,83 @@ $(document).ready(function() {
           toggleButton.text(data.isStreaming ? 'Stop Stream' : 'Start Stream');
           streamingIndicator.removeClass('status-on status-off');
           streamingIndicator.addClass(data.isStreaming ? 'status-on' : 'status-off');
-          if (data.isStreaming) {
-            frameFetchButton.text('Stop Fetching Frames');
-            intervalId = setInterval(function() {
-              $.get('/cameras/' + camera.id + '/last-frame', function(frameData) {
-                $('#camera-' + camera.id + '-frame').attr('src', 'data:image/jpeg;base64,' + frameData);
-              });
-            }, 3000);
-            frameFetchIndicator.removeClass('status-off').addClass('status-on');
-          } else {
-            frameFetchButton.text('Fetch Frames');
-            clearInterval(intervalId);
-            frameFetchIndicator.removeClass('status-on').addClass('status-off');
-          }
+          //if (data.isStreaming) {
+            //frameFetchButton.text('Stop Fetching Frames');
+            //intervalId = setInterval(function() {
+              //$.get('/cameras/' + camera.id + '/last-frame', function(frameData) {
+                //$('#camera-' + camera.id + '-frame').attr('src', 'data:image/jpeg;base64,' + frameData);
+              //});
+            //}, 3000);
+            //frameFetchIndicator.removeClass('status-off').addClass('status-on');
+          //} else {
+            //frameFetchButton.text('Fetch Frames');
+            //clearInterval(intervalId);
+            //frameFetchIndicator.removeClass('status-on').addClass('status-off');
+          //}
         });
       });
       buttonDiv.append(toggleButton);
-      var frameFetchButton = $('<button></button>');
-      frameFetchButton.text('Fetch Frames');
-      frameFetchButton.click(function() {
-        if (frameFetchButton.text() === 'Fetch Frames') {
-          frameFetchButton.text('Stop Fetching Frames');
-          intervalId = setInterval(function() {
-            $.get('/cameras/' + camera.id + '/last-frame', function(frameData) {
-              $('#camera-' + camera.id + '-frame').attr('src', 'data:image/jpeg;base64,' + frameData);
-            });
-          }, 3000);
-          frameFetchIndicator.removeClass('status-off').addClass('status-on');
-        } else {
-          frameFetchButton.text('Fetch Frames');
-          clearInterval(intervalId);
-          frameFetchIndicator.removeClass('status-on').addClass('status-off');
-        }
-      });
-      <!-- buttonDiv.append(frameFetchButton); -->
+      //var frameFetchButton = $('<button></button>');
+      //frameFetchButton.text('Fetch Frames');
+      //frameFetchButton.click(function() {
+        //if (frameFetchButton.text() === 'Fetch Frames') {
+          //frameFetchButton.text('Stop Fetching Frames');
+          //intervalId = setInterval(function() {
+            //$.get('/cameras/' + camera.id + '/last-frame', function(frameData) {
+              //$('#camera-' + camera.id + '-frame').attr('src', 'data:image/jpeg;base64,' + frameData);
+            //});
+          //}, 3000);
+          //frameFetchIndicator.removeClass('status-off').addClass('status-on');
+        //} else {
+          //frameFetchButton.text('Fetch Frames');
+          //clearInterval(intervalId);
+          //frameFetchIndicator.removeClass('status-on').addClass('status-off');
+        //}
+      //});
+      //buttonDiv.append(frameFetchButton);
       
       cameraDiv.append(buttonDiv)
       $('#camera-list').append(cameraDiv);
-      var intervalInput = $('<input type="number" min="1">');
-      intervalInput.val(3000); // Default value
-      intervalInput.change(function() {
-        var newInterval = Number(intervalInput.val());
-        if (newInterval && newInterval > 0) {
-          $.post('/cameras/' + camera.id + '/set-frame-grab-interval', { interval: newInterval }, function(data) {
+      //var intervalInput = $('<input type="number" min="1">');
+      //intervalInput.val(3000); // Default value
+      //intervalInput.change(function() {
+        //var newInterval = Number(intervalInput.val());
+        //if (newInterval && newInterval > 0) {
+          //$.post('/cameras/' + camera.id + '/set-frame-grab-interval', { interval: newInterval }, function(data) {
+            //if (data.success) {
+              //console.log('Updated frame grab interval for camera ' + camera.id);
+            //} else {
+              //console.error('Failed to update frame grab interval for camera ' + camera.id);
+            //}
+          //});
+        //}
+      //});
+      var frameRateInput = $('<input type="number" min="1">');
+      if (!camera.frameRate)
+        camera.frameRate = 3
+      frameRateInput.val(camera.frameRate); // Default value
+      console.log('Updated frame rate for camera ' + camera.frameRate);
+      //frameRateInput.val(3); // Default value
+      buttonDiv.append($('<p>Frame Rate</p>'));
+      
+      buttonDiv.append(frameRateInput);
+      console.log('Updated frame rate for camera ' + frameRateInput);
+      //buttonDiv.append($('<p>Grab Interval(ms)</p>'));
+      //buttonDiv.append(intervalInput);
+      frameRateInput.change(function() {
+        var newFrameRate = Number(frameRateInput.val());
+        console.log('Updated frame rate from here: ' + newFrameRate);
+        if (newFrameRate && newFrameRate > 0) {
+          $.post('/cameras/' + camera.id + '/set-frame-rate/'+newFrameRate, { rate: newFrameRate }, function(data) {
             if (data.success) {
-              console.log('Updated frame grab interval for camera ' + camera.id);
+              console.log('Updated frame rate for camera ' + camera.id);
+              camera.frameRate = newFrameRate; // Update the frame rate in the frontend
             } else {
-              console.error('Failed to update frame grab interval for camera ' + camera.id);
+              console.error('Failed to update frame rate for camera ' + camera.id);
             }
           });
         }
       });
-      buttonDiv.append($('<p>Grab Interval(ms)</p>'));
-      buttonDiv.append(intervalInput);
     });
   });
 });

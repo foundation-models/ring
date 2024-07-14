@@ -70,8 +70,9 @@ async function startStream(camera) {
     if (!(await promisify(fs.exists)(publicOutputDirectory))) {
       await promisify(fs.mkdir)(publicOutputDirectory)
     }
-    
-  
+    if (!camera.frameRate) {
+      camera.frameRate = 3;
+  }
     const call = await camera.streamVideo({
       output: [
         '-preset',
@@ -90,7 +91,7 @@ async function startStream(camera) {
             'delete_segments',
             '-an',
             path.join(publicOutputDirectory, `${camera.name}`+`_stream.m3u8`),
-        '-vf', 'fps=1/3', // This sets the frame rate to 1 frame every 3 seconds
+        '-vf', 'fps=' + (1 / camera.frameRate), // This sets the frame rate to 1 frame every X seconds
         '-update', '1', // This makes sure the output file is overwritten
         path.join(publicOutputDirectory, `${camera.name}_frame.jpg`), // Output to a .jpg file
       ],
@@ -110,6 +111,8 @@ async function startStream(camera) {
     })
     
 console.log('Camera of '+camera.name+' Streamming is Started ')
+
+console.log('Camera of '+camera.name+' Streamming is Started and farme rate is '+camera.frameRate)
 camera.isStreaming = true
 // camera.frameGrabIntervalId = setInterval(() => grabLatestFrame(camera), frameGrabInterval);
 }
@@ -128,27 +131,14 @@ async function stopStream(camera) {
     camera.call = null
   // Wait for 2 seconds before deleting the stream file
   setTimeout(async () => {
-    const filePath = path.join(__dirname, 'public/output', `${camera.name}_stream.m3u8`)
+    const filePath = path.join(__dirname, 'public/output', `${camera.name}_frame.jpg`)
     try {
       await unlink(filePath)
       console.log('Deleted stream file for camera ' + camera.id)
     } catch (err) {
       console.error('Failed to delete stream file for camera ' + camera.id, err)
     }
-    // Delete the .ts files
-    const dirPath = path.join(__dirname, 'public/output')
-    const files = await readdir(dirPath)
-    for (const file of files) {
-      if (file.startsWith(`${camera.name}_stream`) && file.endsWith('.ts')) {
-        try {
-          await unlink(path.join(dirPath, file))
-          console.log('Deleted ' + file)
-        } catch (err) {
-          console.error('Failed to delete ' + file, err)
-        }
-      }
-    }
-  }, 2000)
+   }, 2000)
 } else {
   console.log('No stream to stop for camera ' + camera.id)
 }
@@ -208,22 +198,33 @@ app.post('/cameras/:id/set-frame-grab-interval', (req, res) => {
   }
 });
 
+app.post('/cameras/:id/set-frame-rate/:frame', (req, res) => {
+  const cameraId = Number(req.params.id);
+  if (cameraId) {
+    console.log(cameraId)
+  }
+  console.log(Number(req.params.frame))
+  console.log(JSON.stringify(req.body));
+  const newFrameRate = Number(req.params.frame);
+if (!isNaN(newFrameRate) && newFrameRate > 0) {
+  console.log('New frame rate: ' + newFrameRate);
+} else {
+  console.log('Invalid frame rate');
+}
+  const camera = cameras.find(cam => cam.id === cameraId);
+  if (camera) {
+    console.log(camera.name)
+  }
 
-// old one 
-app.get('/cameras/:id/last-frame', function(req, res) {
-  var cameraId = req.params.id;
-  // Get the last frame of the camera's stream
-  // This will depend on how you're handling video streams
-  // For example, if you're using ffmpeg to save frames as images:
-  var framePath = path.join(__dirname, 'camera_frames', cameraId, 'last.jpg');
-  fs.readFile(framePath, function(err, data) {
-    if (err) {
-      res.status(500).send('Error reading frame');
-    } else {
-      res.send(data.toString('base64'));
-    }
-  });
+  if (camera && newFrameRate) {
+    camera.frameRate = newFrameRate;
+    res.json({ success: true });
+  } else {
+    res.status(400).json({ error: 'Invalid frame rate or camera id' });
+  }
 });
+
+
 // Start server
 app.listen(3000, () => {
   console.log('Server is running on port 3000')
