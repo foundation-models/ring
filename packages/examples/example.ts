@@ -92,8 +92,9 @@ async function startStream(camera) {
             '-an',
             path.join(publicOutputDirectory, `${camera.name}`+`_stream.m3u8`),
         '-vf', 'fps=' + (1 / camera.frameRate), // This sets the frame rate to 1 frame every X seconds
-        '-update', '1', // This makes sure the output file is overwritten
-        path.join(publicOutputDirectory, `${camera.name}_frame.jpg`), // Output to a .jpg file
+        '-s', '1920x1080', // This sets the frame resolution to 1920x1080
+        // '-update', '1', // This makes sure the output file is overwritten
+        path.join(publicOutputDirectory, `${camera.name}.jpg`), // Output to a .jpg file
       ],
     })
     camera.call = call
@@ -131,7 +132,7 @@ async function stopStream(camera) {
     camera.call = null
   // Wait for 2 seconds before deleting the stream file
   setTimeout(async () => {
-    const filePath = path.join(__dirname, 'public/output', `${camera.name}_frame.jpg`)
+    const filePath = path.join(__dirname, 'public/output', `${camera.name}.jpg`)
     try {
       await unlink(filePath)
       console.log('Deleted stream file for camera ' + camera.id)
