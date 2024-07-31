@@ -46,24 +46,12 @@ async function fetchCameras() {
 }
 
 // Endpoint to get camera list
-// Endpoint to get camera list
 app.get('/cameras', (req, res) => {
   console.log('Received request for camera list')
   const cameraList = cameras.map(camera => ({ id: camera.id, name: camera.name, isStreaming: camera.isStreaming }))
   res.json(cameraList)
 })
-// Function to grab the latest frame
-async function grabLatestFrame(camera) {
-  var framePath = path.join(__dirname, 'camera_frames', camera.id.toString(), 'last.jpg');
-  fs.readFile(framePath, function(err, data) {
-    if (err) {
-      console.error('Error reading frame');
-    } else {
-      console.log('Grabbed latest frame for camera ' + camera.id);
-      // TODO: Store the frame data as needed
-    }
-  });
-}
+
 async function startStream(camera) { 
   const app = express(),
     publicOutputDirectory = path.join(__dirname, 'public/output')
@@ -75,6 +63,8 @@ async function startStream(camera) {
   }
     const call = await camera.streamVideo({
       output: [
+        // '-probesize', '15000000', // Increase the probesize
+        // '-analyzeduration', '15000000', // Increase the analyzeduration
         '-preset',
         'veryfast',
         '-g',
@@ -165,16 +155,7 @@ app.post('/cameras/:id/toggle', async (req, res) => {
     console.log('Starting stream for camera ' + cameraId)
     await startStream(camera)
     camera.isStreaming = true
-    // Start fetching frames when the streaming starts
-    var framePath = path.join(__dirname, 'camera_frames', camera.id.toString(), 'last.jpg');
-    fs.readFile(framePath, function(err, data) {
-      if (err) {
-        console.error('Error reading frame');
-      } else {
-        console.log('Started fetching frames for camera ' + cameraId);
-      }
-    });
-  }
+   }
   
   
   // Save the new state
